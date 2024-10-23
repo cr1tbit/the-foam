@@ -9,7 +9,9 @@ pub fn uniform_disc(n: usize) -> Vec<Body> {
     let mut bodies: Vec<Body> = Vec::with_capacity(n);
 
     let m = 1e6;
-    let center = Body::new(Vec2::zero(), Vec2::zero(), m as f32, inner_radius);
+    let center = Body::new(
+        Vec2::zero(), Vec2::zero(), m as f32, inner_radius,
+        [0xff, 0xff, 0xff, 0xFF],);
     bodies.push(center);
 
     while bodies.len() < n {
@@ -21,8 +23,10 @@ pub fn uniform_disc(n: usize) -> Vec<Body> {
         let vel = Vec2::new(sin, -cos);
         let mass = 1.0f32;
         let radius = mass.cbrt();
+        let red = (r*255.0) as u8;
+        let color: [u8; 4] = [red, 0xFF-red, 0xFF, 0xFF];
 
-        bodies.push(Body::new(pos, vel, mass, radius));
+        bodies.push(Body::new(pos, vel, mass, radius, color));
     }
 
     bodies.sort_by(|a, b| a.pos.mag_sq().total_cmp(&b.pos.mag_sq()));

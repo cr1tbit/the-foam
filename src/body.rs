@@ -7,16 +7,18 @@ pub struct Body {
     pub acc: Vec2,
     pub mass: f32,
     pub radius: f32,
+    pub color: [u8; 4],
 }
 
 impl Body {
-    pub fn new(pos: Vec2, vel: Vec2, mass: f32, radius: f32) -> Self {
+    pub fn new(pos: Vec2, vel: Vec2, mass: f32, radius: f32, color:[u8;4]) -> Self {
         Self {
             pos,
             vel,
             acc: Vec2::zero(),
             mass,
             radius,
+            color
         }
     }
 

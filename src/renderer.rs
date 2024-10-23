@@ -10,7 +10,7 @@ use crate::{
 
 use quarkstrom::{egui, winit::event::VirtualKeyCode, winit_input_helper::WinitInputHelper};
 
-use palette::{rgb::Rgba, Hsluv, IntoColor};
+use palette::{rgb::Rgba, Hsl, Hsluv, IntoColor};
 use ultraviolet::Vec2;
 
 use once_cell::sync::Lazy;
@@ -24,6 +24,16 @@ pub static QUADTREE: Lazy<Mutex<Vec<Node>>> = Lazy::new(|| Mutex::new(Vec::new()
 
 pub static SPAWN: Lazy<Mutex<Vec<Body>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
+fn to_pallete(val:f32, scale:f32) -> [u8; 4] {
+    let val_tan: f32 = (val/scale).atan() / 1.57;
+    
+    return [
+        (val_tan * 255.0) as u8,
+        (1.0 - val_tan * 255.0) as u8,
+        0xFF,
+        0xFF
+    ];
+}
 pub struct Renderer {
     pos: Vec2,
     scale: f32,
@@ -32,6 +42,7 @@ pub struct Renderer {
 
     show_bodies: bool,
     show_quadtree: bool,
+    color_momentum: bool,
 
     depth_range: (usize, usize),
 
@@ -55,6 +66,7 @@ impl quarkstrom::Renderer for Renderer {
 
             show_bodies: true,
             show_quadtree: false,
+            color_momentum: true,
 
             depth_range: (0, 0),
 
@@ -114,7 +126,9 @@ impl quarkstrom::Renderer for Renderer {
 
         if input.mouse_pressed(1) {
             let mouse = world_mouse();
-            self.spawn_body = Some(Body::new(mouse, Vec2::zero(), 1.0, 1.0));
+            self.spawn_body = Some(Body::new(
+                mouse, Vec2::zero(), 
+                1.0, 1.0, [0xff; 4]));
             self.angle = None;
             self.total = Some(0.0);
         } else if input.mouse_held(1) {
@@ -165,7 +179,12 @@ impl quarkstrom::Renderer for Renderer {
         if !self.bodies.is_empty() {
             if self.show_bodies {
                 for i in 0..self.bodies.len() {
-                    ctx.draw_circle(self.bodies[i].pos, self.bodies[i].radius, [0xff; 4]);
+                    let mut color = self.bodies[i].color;
+                    if self.color_momentum {
+                        let c = self.bodies[i].vel.mag(); 
+                        color = to_pallete(c, 20.0);
+                    }
+                    ctx.draw_circle(self.bodies[i].pos, self.bodies[i].radius, color);
                 }
             }
 
@@ -247,6 +266,8 @@ impl quarkstrom::Renderer for Renderer {
         egui::Window::new("")
             .open(&mut self.settings_window_open)
             .show(ctx, |ui| {
+                //todo - this should calculate the speed relative to the mass centre
+                ui.checkbox(&mut self.color_momentum, "Color momentum");
                 ui.checkbox(&mut self.show_bodies, "Show Bodies");
                 ui.checkbox(&mut self.show_quadtree, "Show Quadtree");
                 if self.show_quadtree {

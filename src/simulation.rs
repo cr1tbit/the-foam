@@ -13,7 +13,7 @@ pub struct Simulation {
 impl Simulation {
     pub fn new() -> Self {
         let dt = 0.05;
-        let n = 100000;
+        let n = 50000;
         let theta = 1.0;
         let epsilon = 1.0;
         let leaf_capacity = 16;
@@ -48,6 +48,7 @@ impl Simulation {
         for body in &mut self.bodies {
             body.update(self.dt);
         }
+        self.bodies.retain(|body| body.pos.x.abs() < 10000.0 && body.pos.y.abs() < 10000.0);
     }
 
     pub fn collide(&mut self) {
